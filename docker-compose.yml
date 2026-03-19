@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    # Industry standard for open-source geospatial data [cite: 51]
+    # Uses Spatial Indices (GiST) for high-performance radius queries [cite: 52]
+    image: postgis/postgis:16-3.4
+    container_name: pawnder_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pawnder_db
+    ports:
+      - "5432:5432"
+    volumes:
+      # Ensures persistence layer data is not lost on container restart [cite: 41, 42]
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d pawnder_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    # Builds from the Dockerfile in the current directory [cite: 47]
+    build: .
+    container_name: pawnder_api
+    ports:
+      - "8000:8000"
+    environment:
+      # Uses the 'db' service name to connect the API to the persistence layer [cite: 101, 104]
+      - DATABASE_URL=postgresql://user:password@db:5432/pawnder_db
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Bind mount for "Hot Reload" feature to speed up UI and feature development [cite: 46]
+      - .:/app
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
