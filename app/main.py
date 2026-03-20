@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -6,6 +9,7 @@ from .database import engine, get_db
 from . import models
 
 models.Base.metadata.create_all(bind=engine)
+load_dotenv()
 
 app = FastAPI(title="Pawnder API - Dev")
 
@@ -14,7 +18,7 @@ app = FastAPI(title="Pawnder API - Dev")
 def read_root():
     return {
         "message": "Pawnder API is running!",
-        "lead": "Justin"
+        "user": os.getenv("POSTGRES_USER")
     }
 
 
